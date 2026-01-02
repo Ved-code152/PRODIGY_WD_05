@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weather Web Application</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2193b0, #6dd5ed);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .weather-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            width: 340px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #2193b0;
+        }
+
+        input {
+            width: 80%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #2193b0;
+            color: white;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .weather-info {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .temp {
+            font-size: 40px;
+            font-weight: bold;
+        }
+
+        .details {
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="weather-container">
+    <h1>🌤 Weather App</h1>
+
+    <input type="text" id="cityInput" placeholder="Enter city name">
+    <br>
+    <button onclick="getWeatherByCity()">Search</button>
+    <button onclick="getWeatherByLocation()">Use My Location</button>
+
+    <div class="weather-info" id="weatherInfo">
+        <h2 id="cityName"></h2>
+        <div class="temp" id="temperature"></div>
+        <div class="details" id="condition"></div>
+        <div class="details" id="humidity"></div>
+        <div class="details" id="wind"></div>
+    </div>
+
+    <div class="error" id="error"></div>
+</div>
+
+<script>
+    const API_KEY = "b33cab36ef1860b8b246f6b1959b5f48";
+
+    function getWeatherByCity() {
+        const city = document.getElementById("cityInput").value;
+        if (city === "") {
+            showError("Please enter a city name");
+            return;
+        }
+        fetchWeather(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
+    }
+
+    function getWeatherByLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                fetchWeather(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+            }, () => {
+                showError("Location access denied");
+            });
+        } else {
+            showError("Geolocation not supported");
+        }
+    }
+
+    function fetchWeather(url) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.cod !== 200) {
+                    showError("City not found");
+                    return;
+                }
+                displayWeather(data);
+            })
+            .catch(() => showError("Unable to fetch weather data"));
+    }
+
+    function displayWeather(data) {
+        document.getElementById("error").textContent = "";
+        document.getElementById("weatherInfo").style.display = "block";
+
+        document.getElementById("cityName").textContent = data.name;
+        document.getElementById("temperature").textContent = `${Math.round(data.main.temp)}°C`;
+        document.getElementById("condition").textContent = `Condition: ${data.weather[0].description}`;
+        document.getElementById("humidity").textContent = `Humidity: ${data.main.humidity}%`;
+        document.getElementById("wind").textContent = `Wind Speed: ${data.wind.speed} m/s`;
+    }
+
+    function showError(message) {
+        document.getElementById("weatherInfo").style.display = "none";
+        document.getElementById("error").textContent = message;
+    }
+</script>
+
+</body>
+</html>
